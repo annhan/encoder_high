@@ -4,9 +4,10 @@
  //The following three vars should be visible to loop(), which
 // can find out if an encoder changed by testing rotoInt.
 static   byte roABold;          // A,B states for rotor
-volatile uint16_t roCount;      // current rotary count
+volatile long roCount;      // current rotary count
+long tocdo;
 volatile byte rotoInt;          // Rotary-interrupt flag (change flag)
-
+unsigned long timer_gio;
 // jiw (c) 2015  Offered without warranty under GPL v3 terms as at http://www.gnu.org/licenses/gpl.html
 
 ISR(PCINT1_vect) {  // This plus Arduino overhead of 2.6 us probably takes ca 5 us total per interrupt
@@ -25,7 +26,7 @@ ISR(PCINT1_vect) {  // This plus Arduino overhead of 2.6 us probably takes ca 5 
 // For rotary encoder initialization, in setup(), say:   setup_rotocoder();
 void setup_rotocoder() {
   rotoInt = roABold = 0;
-  roCount = 32768;              // Start with a middle count
+  roCount = 0;              // Start with a middle count
   pinMode(A0, INPUT_PULLUP);    // pin 14, A0, PC0, for pin-change interrupt
   pinMode(A1, INPUT_PULLUP);    // pin 15, A1, PC1, for pin-change interrupt
   PCMSK1 |= 0x03;
@@ -34,10 +35,27 @@ void setup_rotocoder() {
 }
 void setup() {
   // put your setup code here, to run once:
+  Serial.begin(9600);
 setup_rotocoder();
+timer_gio = millis();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+    if ( (unsigned long) (millis() - timer_gio) > 10000 ) {
+        timer_gio = millis();
+        long tam =0;
+        //if (tocdo < roCount){tam = roCount - tocdo;}
+        //else tam= tocdo - roCount;
+        tam = roCount - tocdo;
+        Serial.println(tam);
+        tocdo=roCount;
+        Serial.println(tam);
+        tam=tam/100;
+        Serial.println(tam);
+        tam=tam*6;
+        Serial.print(roCount);
+        Serial.print(" V/P: ");
+        Serial.println(tam);
+    }
 }
